@@ -42,37 +42,61 @@ function init() {
     nextBtn.addEventListener('click', nextStage);
 }
 
-// グリッドの作成
+// グリッドの作成（左：3x3、薄い数字ガイド）
 function createGrid() {
     placementArea.innerHTML = '';
     for (let i = 0; i < game.gridSize * game.gridSize; i++) {
         const cell = document.createElement('div');
         cell.className = 'grid-cell';
         cell.dataset.index = i;
-        
+        // 左側は 1〜9 の薄い数字ガイドを表示
+        const requiredNumber = i + 1;
+        cell.dataset.requiredNumber = requiredNumber;
+        const hint = document.createElement('div');
+        hint.className = 'hint-number';
+        hint.textContent = requiredNumber;
+        cell.appendChild(hint);
+
         cell.addEventListener('dragover', handleDragOver);
         cell.addEventListener('drop', handleDrop);
         cell.addEventListener('dragleave', handleDragLeave);
-        
+
         placementArea.appendChild(cell);
+    }
+    // 右側スロット（4x3）
+    createRightSlots();
+}
+
+function createRightSlots() {
+    piecesArea.innerHTML = '';
+    for (let i = 0; i < 12; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'piece-slot';
+        piecesArea.appendChild(slot);
     }
 }
 
 // パズル生成
 function generatePuzzle() {
-    const totalPieces = game.gridSize * game.gridSize;
-    
-    // ランダムで完成可能かどうかを決定（70%の確率で完成可能）
-    game.canComplete = Math.random() < 0.7;
-    
-    if (game.canComplete) {
-        // 完成可能なパズルを生成
-        game.currentPuzzle = generateCompletablePuzzle();
-    } else {
-        // 完成不可能なパズルを生成
-        game.currentPuzzle = generateIncompletablePuzzle();
+    // 右側は 1〜12 の数字からランダムに9個選ぶ
+    const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
+    for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
     }
-    
+    const selected = numbers.slice(0, 9);
+
+    // 完成可能判定：選ばれた9個が 1〜9 と一致する場合のみ
+    game.canComplete = selected.slice().sort((a,b)=>a-b).every((n, idx) => n === idx + 1);
+
+    // ピース生成（色は適当に割当）
+    game.currentPuzzle = selected.map((num, idx) => ({
+        id: idx,
+        color: colors[idx % colors.length],
+        number: num,
+        used: false
+    }));
+
     renderPieces();
 }
 
@@ -141,8 +165,11 @@ function generateIncompletablePuzzle() {
 
 // ピースの描画
 function renderPieces() {
-    piecesArea.innerHTML = '';
-    
+    // 右側の12スロットに再配置
+    createRightSlots();
+    const slots = piecesArea.querySelectorAll('.piece-slot');
+    let slotIndex = 0;
+
     game.currentPuzzle.forEach(piece => {
         const pieceElement = document.createElement('div');
         pieceElement.className = `puzzle-piece ${piece.used ? 'used' : ''}`;
@@ -150,13 +177,20 @@ function renderPieces() {
         pieceElement.textContent = piece.number;
         pieceElement.draggable = !piece.used;
         pieceElement.dataset.pieceId = piece.id;
-        
+
         if (!piece.used) {
             pieceElement.addEventListener('dragstart', handleDragStart);
             pieceElement.addEventListener('dragend', handleDragEnd);
         }
-        
-        piecesArea.appendChild(pieceElement);
+
+        // 空きスロットに配置
+        while (slotIndex < slots.length && slots[slotIndex].children.length > 0) {
+            slotIndex++;
+        }
+        if (slotIndex < slots.length) {
+            slots[slotIndex].appendChild(pieceElement);
+            slotIndex++;
+        }
     });
 }
 
@@ -197,6 +231,13 @@ function handleDrop(e) {
     // ピースをセルに配置
     const pieceId = parseInt(draggedPiece.dataset.pieceId);
     const piece = game.currentPuzzle[pieceId];
+
+    // 番号一致チェック（左は 1〜9 の対応）
+    const required = parseInt(cell.dataset.requiredNumber, 10);
+    if (piece.number !== required) {
+        // 不一致ならドロップ不可
+        return;
+    }
     
     const placedPiece = draggedPiece.cloneNode(true);
     placedPiece.draggable = false;
@@ -244,14 +285,11 @@ function checkCompletion() {
 // 正しい配置のチェック
 function checkCorrectPlacement() {
     const cells = placementArea.querySelectorAll('.grid-cell');
-    const placedColors = Array.from(cells).map(cell => {
+    return Array.from(cells).every(cell => {
         const piece = cell.querySelector('.puzzle-piece');
-        return piece ? piece.style.backgroundColor : null;
+        const required = parseInt(cell.dataset.requiredNumber, 10);
+        return piece && parseInt(piece.textContent, 10) === required;
     });
-    
-    // 全ての色が異なるかチェック
-    const uniqueColors = new Set(placedColors);
-    return uniqueColors.size === placedColors.length && !placedColors.includes(null);
 }
 
 // 補充捜査
@@ -273,10 +311,9 @@ function handleInvestigate() {
     for (let i = 0; i < changeCount; i++) {
         const randomIndex = Math.floor(Math.random() * unusedPieces.length);
         const piece = unusedPieces[randomIndex];
-        
-        // 新しい色に変更
+        // 新しい色＆番号（1〜12）に変更
         piece.color = colors[Math.floor(Math.random() * colors.length)];
-        piece.number = Math.floor(Math.random() * 99) + 1;
+        piece.number = Math.floor(Math.random() * 12) + 1;
     }
     
     renderPieces();
