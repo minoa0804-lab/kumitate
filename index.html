@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>検察パズルゲーム - 組立</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🧩 検察パズル組立ゲーム</h1>
+            <div class="info-bar">
+                <div class="timer">
+                    <span>経過時間: </span>
+                    <span id="timer">00:00.0</span>
+                </div>
+                <div class="score">
+                    <span>スコア: </span>
+                    <span id="score">0</span>
+                </div>
+                <div class="stage">
+                    <span>ステージ: </span>
+                    <span id="stage">1</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="game-area">
+            <!-- 左側: 配置エリア -->
+            <div class="left-panel">
+                <h2>配置エリア</h2>
+                <div id="placement-area" class="placement-grid"></div>
+                <div class="action-buttons">
+                    <button id="investigate-btn" class="btn btn-investigate">🔍 補充捜査</button>
+                    <button id="dismiss-btn" class="btn btn-dismiss">❌ 不起訴</button>
+                </div>
+            </div>
+
+            <!-- 右側: ピースエリア -->
+            <div class="right-panel">
+                <h2>利用可能なピース</h2>
+                <div id="pieces-area" class="pieces-container"></div>
+            </div>
+        </main>
+
+        <!-- モーダル -->
+        <div id="result-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2 id="result-title"></h2>
+                <p id="result-message"></p>
+                <p id="result-time"></p>
+                <button id="next-btn" class="btn btn-next">次のステージへ</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
