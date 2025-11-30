@@ -6,7 +6,8 @@ const game = {
     timerInterval: null,
     currentPuzzle: null,
     gridSize: 3,
-    canComplete: true // 現在のパズルが完成可能かどうか
+    canComplete: true, // 現在のパズルが完成可能かどうか
+    leftNumbers: [] // 左グリッドに表示する必要番号（9個）
 };
 
 // パズルの色パターン
@@ -32,6 +33,8 @@ const nextBtn = document.getElementById('next-btn');
 
 // 初期化
 function init() {
+    // 左側の必要番号を初期生成
+    game.leftNumbers = sampleNineFromTwelve();
     createGrid();
     generatePuzzle();
     startTimer();
@@ -49,8 +52,8 @@ function createGrid() {
         const cell = document.createElement('div');
         cell.className = 'grid-cell';
         cell.dataset.index = i;
-        // 左側は 1〜9 の薄い数字ガイドを表示
-        const requiredNumber = i + 1;
+        // 左側はランダム選出した 1〜12 の9個を表示
+        const requiredNumber = game.leftNumbers[i];
         cell.dataset.requiredNumber = requiredNumber;
         const hint = document.createElement('div');
         hint.className = 'hint-number';
@@ -79,15 +82,12 @@ function createRightSlots() {
 // パズル生成
 function generatePuzzle() {
     // 右側は 1〜12 の数字からランダムに9個選ぶ
-    const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
-    for (let i = numbers.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
-    }
-    const selected = numbers.slice(0, 9);
+    const selected = sampleNineFromTwelve();
 
-    // 完成可能判定：選ばれた9個が 1〜9 と一致する場合のみ
-    game.canComplete = selected.slice().sort((a,b)=>a-b).every((n, idx) => n === idx + 1);
+    // 完成可能判定：右の9個集合が左の9個集合と一致
+    const leftSet = new Set(game.leftNumbers);
+    const rightSet = new Set(selected);
+    game.canComplete = leftSet.size === rightSet.size && [...leftSet].every(n => rightSet.has(n));
 
     // ピース生成（色は適当に割当）
     game.currentPuzzle = selected.map((num, idx) => ({
@@ -98,6 +98,16 @@ function generatePuzzle() {
     }));
 
     renderPieces();
+}
+
+// 1〜12から重複なしで9個をランダム選出
+function sampleNineFromTwelve() {
+    const numbers = Array.from({ length: 12 }, (_, i) => i + 1);
+    for (let i = numbers.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [numbers[i], numbers[j]] = [numbers[j], numbers[i]];
+    }
+    return numbers.slice(0, 9);
 }
 
 // 完成可能なパズル生成
@@ -165,7 +175,7 @@ function generateIncompletablePuzzle() {
 
 // ピースの描画
 function renderPieces() {
-    // 右側の12スロットに再配置
+    // 右側の12スロットを再作成し、ピースを詰めて配置
     createRightSlots();
     const slots = piecesArea.querySelectorAll('.piece-slot');
     let slotIndex = 0;
@@ -223,8 +233,8 @@ function handleDrop(e) {
     
     const cell = e.currentTarget;
     
-    // すでにピースがある場合は何もしない
-    if (cell.children.length > 0) {
+    // すでにピースが置かれている場合は何もしない（ヒントは無視）
+    if (cell.querySelector('.puzzle-piece')) {
         return;
     }
     
@@ -256,7 +266,10 @@ function handleDrop(e) {
 
 // ピースの削除（クリックで元に戻す）
 function removePiece(cell, pieceId) {
-    cell.innerHTML = '';
+    const placed = cell.querySelector('.puzzle-piece');
+    if (placed) {
+        placed.remove();
+    }
     cell.classList.remove('filled');
     
     const piece = game.currentPuzzle[pieceId];
@@ -328,7 +341,7 @@ function handleDismiss() {
     const elapsed = Date.now() - game.startTime;
     
     resultModal.classList.remove('hidden');
-    resultTitle.textContent = '❌ 不起訴';
+    resultTitle.textContent = '不起訴';
     resultTitle.className = 'dismissal';
     
     if (!game.canComplete) {
@@ -349,9 +362,9 @@ function handleIndictment() {
     const elapsed = Date.now() - game.startTime;
     
     resultModal.classList.remove('hidden');
-    resultTitle.textContent = '✅ 公判請求';
+    resultTitle.textContent = '公判請求';
     resultTitle.className = 'indictment';
-    resultMessage.textContent = 'おめでとうございます！パズルを完成させました！';
+    resultMessage.textContent = 'パズルを完成させました！';
     resultTime.textContent = `経過時間: ${formatTime(elapsed)}`;
     
     game.score += elapsed;
@@ -363,14 +376,11 @@ function nextStage() {
     game.stage++;
     resultModal.classList.add('hidden');
     
-    // グリッドをクリア
-    const cells = placementArea.querySelectorAll('.grid-cell');
-    cells.forEach(cell => {
-        cell.innerHTML = '';
-        cell.classList.remove('filled');
-    });
-    
-    // 新しいパズルを生成
+    // 左側の必要番号を再生成してグリッドを再構築
+    game.leftNumbers = sampleNineFromTwelve();
+    createGrid();
+
+    // 新しいパズルを生成（右側9個）
     generatePuzzle();
     game.startTime = Date.now();
     startTimer();

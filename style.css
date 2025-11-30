@@ -118,6 +118,17 @@ h2 {
     user-select: none;
 }
 
+/* 左の配置エリアに置いたピースを枠いっぱいに */
+.grid-cell .puzzle-piece {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    box-shadow: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .grid-cell.drag-over {
     background: #e3f2fd;
     border-color: #2196f3;
@@ -147,6 +158,28 @@ h2 {
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
+    aspect-ratio: 1;
+}
+
+/* 右側スロット内のピースを枠いっぱいに */
+.piece-slot .puzzle-piece {
+    width: 100%;
+    height: 100%;
+    border-radius: 10px;
+    box-shadow: none;
+    cursor: grab;
+    font-size: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* スロットのサイズが小さい場合の文字サイズ調整 */
+@media (max-width: 768px) {
+    .piece-slot .puzzle-piece {
+        font-size: 1.5rem;
+    }
 }
 
 .puzzle-piece {
