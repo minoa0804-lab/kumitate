@@ -7,7 +7,9 @@ const game = {
     currentPuzzle: null,
     gridSize: 3,
     canComplete: true, // 現在のパズルが完成可能かどうか
-    leftNumbers: [] // 左グリッドに表示する必要番号（9個）
+    leftNumbers: [], // 左グリッドに表示する必要番号(9個)
+    timeLimit: 30000, // 制限時間30秒(ミリ秒)
+    isGameOver: false // ゲームオーバーフラグ
 };
 
 // パズルの色パターン
@@ -16,6 +18,34 @@ const colors = [
     '#9b59b6', '#1abc9c', '#e67e22', '#34495e',
     '#16a085'
 ];
+
+// 証拠ラベル（1～12）
+const evidenceLabels = [
+    '',           // 0 (未使用)
+    '目撃者',     // 1
+    '防犯カメラ', // 2
+    '凶器',       // 3
+    '指紋',       // 4
+    'GPS',        // 5
+    '鑑定書',     // 6
+    '通話履歴',   // 7
+    'SNS',        // 8
+    '供述調書',   // 9
+    '実況見分',   // 10
+    '秘密の暴露', // 11
+    '被害届'      // 12
+];
+
+// ラベル取得（改行処理付き）
+function getEvidenceLabel(num) {
+    const label = evidenceLabels[num] || '';
+    // 4文字以上の場合、2文字ずつ改行
+    if (label.length > 3) {
+        const mid = Math.ceil(label.length / 2);
+        return label.substring(0, mid) + '\n' + label.substring(mid);
+    }
+    return label;
+}
 
 // DOM要素
 const placementArea = document.getElementById('placement-area');
@@ -57,7 +87,8 @@ function createGrid() {
         cell.dataset.requiredNumber = requiredNumber;
         const hint = document.createElement('div');
         hint.className = 'hint-number';
-        hint.textContent = requiredNumber;
+        hint.textContent = getEvidenceLabel(requiredNumber);
+        hint.style.whiteSpace = 'pre-line';
         cell.appendChild(hint);
 
         cell.addEventListener('dragover', handleDragOver);
@@ -184,9 +215,11 @@ function renderPieces() {
         const pieceElement = document.createElement('div');
         pieceElement.className = `puzzle-piece ${piece.used ? 'used' : ''}`;
         pieceElement.style.backgroundColor = piece.color;
-        pieceElement.textContent = piece.number;
+        pieceElement.textContent = getEvidenceLabel(piece.number);
+        pieceElement.style.whiteSpace = 'pre-line';
         pieceElement.draggable = !piece.used;
         pieceElement.dataset.pieceId = piece.id;
+        pieceElement.dataset.evidenceNumber = piece.number;
 
         if (!piece.used) {
             pieceElement.addEventListener('dragstart', handleDragStart);
@@ -230,6 +263,8 @@ function handleDragLeave(e) {
 function handleDrop(e) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
+    
+    if (game.isGameOver) return;
     
     const cell = e.currentTarget;
     
@@ -301,12 +336,15 @@ function checkCorrectPlacement() {
     return Array.from(cells).every(cell => {
         const piece = cell.querySelector('.puzzle-piece');
         const required = parseInt(cell.dataset.requiredNumber, 10);
-        return piece && parseInt(piece.textContent, 10) === required;
+        const placed = piece ? parseInt(piece.dataset.evidenceNumber, 10) : null;
+        return placed === required;
     });
 }
 
 // 補充捜査
 function handleInvestigate() {
+    if (game.isGameOver) return;
+    
     // 使用されていないピースをランダムに変更
     const unusedPieces = game.currentPuzzle.filter(p => !p.used);
     
@@ -337,8 +375,21 @@ function handleInvestigate() {
 
 // 不起訴
 function handleDismiss() {
-    stopTimer();
     const elapsed = Date.now() - game.startTime;
+    
+    // 10秒経過前の不起訴はゲームオーバー
+    if (elapsed < 10000) {
+        handleGameOver('捜査不十分！最低10秒は捜査を尽くす必要があります。');
+        return;
+    }
+    
+    // まだ配置可能なピースがある場合はゲームオーバー
+    if (canStillPlacePieces()) {
+        handleGameOver('配置可能な証拠があります！捜査を続けてください。');
+        return;
+    }
+    
+    stopTimer();
     
     resultModal.classList.remove('hidden');
     resultTitle.textContent = '不起訴';
@@ -351,21 +402,64 @@ function handleDismiss() {
         game.score += 30000; // ペナルティ
     }
     
-    resultTime.textContent = `経過時間: ${formatTime(elapsed)}`;
+    resultTime.textContent = `経過時間: ${formatTime(game.timeLimit - (Date.now() - game.startTime))}`;
     game.score += elapsed;
     updateDisplay();
 }
 
+// ゲームオーバー処理
+function handleGameOver(message) {
+    game.isGameOver = true;
+    stopTimer();
+    
+    resultModal.classList.remove('hidden');
+    resultTitle.textContent = 'ゲームオーバー';
+    resultTitle.className = 'game-over';
+    resultMessage.textContent = message;
+    resultTime.textContent = '適正な捜査を心がけましょう。';
+    
+    // 次のステージボタンを「最初から」に変更
+    nextBtn.textContent = '最初からやり直す';
+    nextBtn.onclick = () => location.reload();
+}
+
+// 配置可能なピースがあるかチェック
+function canStillPlacePieces() {
+    const unusedPieces = game.currentPuzzle.filter(p => !p.used);
+    if (unusedPieces.length === 0) return false;
+    
+    // 空いているセルを取得
+    const cells = placementArea.querySelectorAll('.grid-cell');
+    const emptyCells = Array.from(cells).filter(cell => !cell.querySelector('.puzzle-piece'));
+    
+    if (emptyCells.length === 0) return false;
+    
+    // 未使用ピースと空きセルの番号が一致するものがあるかチェック
+    for (const piece of unusedPieces) {
+        for (const cell of emptyCells) {
+            const required = parseInt(cell.dataset.requiredNumber, 10);
+            if (piece.number === required) {
+                return true;
+            }
+        }
+    }
+    
+    return false;
+}
+
 // 公判請求
 function handleIndictment() {
+    if (game.isGameOver) return;
+    
     stopTimer();
     const elapsed = Date.now() - game.startTime;
+    const remaining = game.timeLimit - elapsed;
     
     resultModal.classList.remove('hidden');
     resultTitle.textContent = '公判請求';
     resultTitle.className = 'indictment';
     resultMessage.textContent = 'パズルを完成させました！';
-    resultTime.textContent = `経過時間: ${formatTime(elapsed)}`;
+    resultTime.textContent = `残り時間: ${formatTime(remaining)}`;
     
     game.score += elapsed;
     updateDisplay();
@@ -374,7 +468,12 @@ function handleIndictment() {
 // 次のステージ
 function nextStage() {
     game.stage++;
+    game.isGameOver = false;
     resultModal.classList.add('hidden');
+    
+    // ボタンテキストを元に戻す
+    nextBtn.textContent = '次のステージへ';
+    nextBtn.onclick = nextStage;
     
     // 左側の必要番号を再生成してグリッドを再構築
     game.leftNumbers = sampleNineFromTwelve();
@@ -402,14 +501,28 @@ function stopTimer() {
 
 function updateTimer() {
     const elapsed = Date.now() - game.startTime;
-    timerDisplay.textContent = formatTime(elapsed);
+    const remaining = game.timeLimit - elapsed;
+    
+    if (remaining <= 0) {
+        // タイムアップ
+        handleGameOver('タイムアップ！制限時間内に判断できませんでした。');
+        return;
+    }
+    
+    // 残り時間を表示（赤字で警告）
+    timerDisplay.textContent = formatTime(remaining);
+    if (remaining < 5000) {
+        timerDisplay.style.color = '#e74c3c';
+    } else {
+        timerDisplay.style.color = '#333';
+    }
 }
 
 function formatTime(ms) {
-    const seconds = Math.floor(ms / 1000);
-    const deciseconds = Math.floor((ms % 1000) / 100);
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+    const deciseconds = Math.floor((Math.max(0, ms) % 1000) / 100);
+    const minutes = Math.floor(totalSeconds / 60);
+    const secs = totalSeconds % 60;
     
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${deciseconds}`;
 }
