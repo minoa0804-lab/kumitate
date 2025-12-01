@@ -381,9 +381,6 @@ function handleInvestigate() {
     }
     
     renderPieces();
-    
-    // スコアにペナルティ（10秒追加）
-    game.score += 10000;
 }
 
 // 不起訴
