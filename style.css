@@ -11,6 +11,125 @@ body {
     padding: 20px;
 }
 
+/* タイトル画面 */
+.title-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+    padding: 20px;
+}
+
+.title-content {
+    background: white;
+    border-radius: 20px;
+    padding: 40px;
+    max-width: 800px;
+    width: 100%;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.5s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.game-title {
+    color: #667eea;
+    text-align: center;
+    font-size: 2.5em;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.game-description {
+    margin-bottom: 30px;
+}
+
+.game-description h2 {
+    color: #333;
+    font-size: 1.5em;
+    margin-bottom: 20px;
+    text-align: center;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 10px;
+}
+
+.rules {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.rule-item {
+    background: #f8f9fa;
+    padding: 15px;
+    border-radius: 10px;
+    border-left: 4px solid #667eea;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.rule-icon {
+    font-size: 1.5em;
+    flex-shrink: 0;
+}
+
+.rule-item p {
+    margin: 0;
+    color: #555;
+    line-height: 1.6;
+}
+
+.rule-item strong {
+    color: #333;
+}
+
+.rule-item ul {
+    margin: 5px 0 0 20px;
+    color: #666;
+}
+
+.rule-item li {
+    margin: 3px 0;
+}
+
+.btn-start {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-size: 1.5em;
+    padding: 20px 40px;
+    width: 100%;
+    border: none;
+    border-radius: 15px;
+    cursor: pointer;
+    box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    transition: all 0.3s ease;
+}
+
+.btn-start:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.6);
+}
+
+.btn-start:active {
+    transform: translateY(-1px);
+}
+
 .container {
     max-width: 1400px;
     margin: 0 auto;

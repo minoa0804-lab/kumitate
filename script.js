@@ -60,19 +60,32 @@ const resultTitle = document.getElementById('result-title');
 const resultMessage = document.getElementById('result-message');
 const resultTime = document.getElementById('result-time');
 const nextBtn = document.getElementById('next-btn');
+const titleScreen = document.getElementById('title-screen');
+const gameContainer = document.getElementById('game-container');
+const startBtn = document.getElementById('start-btn');
 
 // 初期化
 function init() {
+    // スタートボタンのイベントリスナー
+    startBtn.addEventListener('click', startGame);
+    
+    investigateBtn.addEventListener('click', handleInvestigate);
+    dismissBtn.addEventListener('click', handleDismiss);
+    nextBtn.addEventListener('click', nextStage);
+}
+
+// ゲーム開始
+function startGame() {
+    // タイトル画面を非表示、ゲーム画面を表示
+    titleScreen.style.display = 'none';
+    gameContainer.style.display = 'block';
+    
     // 左側の必要番号を初期生成
     game.leftNumbers = sampleNineFromTwelve();
     createGrid();
     generatePuzzle();
     startTimer();
     updateDisplay();
-    
-    investigateBtn.addEventListener('click', handleInvestigate);
-    dismissBtn.addEventListener('click', handleDismiss);
-    nextBtn.addEventListener('click', nextStage);
 }
 
 // グリッドの作成（左：3x3、薄い数字ガイド）

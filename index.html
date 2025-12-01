@@ -7,7 +7,49 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
+    <!-- タイトル画面 -->
+    <div id="title-screen" class="title-screen">
+        <div class="title-content">
+            <h1 class="game-title">🧩 検察パズル組立ゲーム</h1>
+            <div class="game-description">
+                <h2>ゲームの説明</h2>
+                <div class="rules">
+                    <div class="rule-item">
+                        <span class="rule-icon">📋</span>
+                        <p><strong>目的:</strong> 右側の証拠ピースを左側の枠に正しく配置して事件を立証する</p>
+                    </div>
+                    <div class="rule-item">
+                        <span class="rule-icon">⏱️</span>
+                        <p><strong>制限時間:</strong> 各パズル30秒以内に判断</p>
+                    </div>
+                    <div class="rule-item">
+                        <span class="rule-icon">✅</span>
+                        <p><strong>公判請求:</strong> すべてのピースを正しく配置すると自動的に成功</p>
+                    </div>
+                    <div class="rule-item">
+                        <span class="rule-icon">❌</span>
+                        <p><strong>不起訴:</strong> 証拠が揃わないと判断したらボタンを押す（最低10秒は捜査必須）</p>
+                    </div>
+                    <div class="rule-item">
+                        <span class="rule-icon">🔍</span>
+                        <p><strong>補充捜査:</strong> 未使用のピースをランダムに変更できる（ペナルティ+10秒）</p>
+                    </div>
+                    <div class="rule-item">
+                        <span class="rule-icon">⚠️</span>
+                        <p><strong>ゲームオーバー条件:</strong></p>
+                        <ul>
+                            <li>時間切れ</li>
+                            <li>10秒未満で不起訴を選択</li>
+                            <li>配置可能なピースがあるのに不起訴</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <button id="start-btn" class="btn btn-start">ゲームスタート</button>
+        </div>
+    </div>
+
+    <div class="container" id="game-container" style="display: none;">
         <header>
             <h1>🧩 検察パズル組立ゲーム</h1>
             <div class="info-bar">
