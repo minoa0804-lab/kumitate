@@ -8,9 +8,14 @@ const game = {
     gridSize: 3,
     canComplete: true, // 現在のパズルが完成可能かどうか
     leftNumbers: [], // 左グリッドに表示する必要番号(9個)
-    timeLimit: 30000, // 制限時間30秒(ミリ秒)
+    timeLimit: isMobile() ? 45000 : 30000, // モバイル45秒、PC30秒
     isGameOver: false // ゲームオーバーフラグ
 };
+
+// モバイルデバイス判定
+function isMobile() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+}
 
 // パズルの色パターン
 const colors = [
@@ -79,6 +84,9 @@ function startGame() {
     // タイトル画面を非表示、ゲーム画面を表示
     titleScreen.style.display = 'none';
     gameContainer.style.display = 'block';
+    
+    // タイマー表示を初期化
+    timerDisplay.textContent = formatTime(game.timeLimit);
     
     // 左側の必要番号を初期生成
     game.leftNumbers = sampleNineFromTwelve();
@@ -237,6 +245,11 @@ function renderPieces() {
         if (!piece.used) {
             pieceElement.addEventListener('dragstart', handleDragStart);
             pieceElement.addEventListener('dragend', handleDragEnd);
+            
+            // タッチイベント対応
+            pieceElement.addEventListener('touchstart', handleTouchStart, { passive: false });
+            pieceElement.addEventListener('touchmove', handleTouchMove, { passive: false });
+            pieceElement.addEventListener('touchend', handleTouchEnd, { passive: false });
         }
 
         // 空きスロットに配置
@@ -252,6 +265,8 @@ function renderPieces() {
 
 // ドラッグ&ドロップ処理
 let draggedPiece = null;
+let touchStartX = 0;
+let touchStartY = 0;
 
 function handleDragStart(e) {
     draggedPiece = e.target;
@@ -261,6 +276,79 @@ function handleDragStart(e) {
 
 function handleDragEnd(e) {
     e.target.classList.remove('dragging');
+}
+
+// タッチイベントハンドラ
+function handleTouchStart(e) {
+    e.preventDefault();
+    draggedPiece = e.target;
+    draggedPiece.classList.add('dragging');
+    const touch = e.touches[0];
+    touchStartX = touch.clientX;
+    touchStartY = touch.clientY;
+}
+
+function handleTouchMove(e) {
+    e.preventDefault();
+    if (!draggedPiece) return;
+    
+    const touch = e.touches[0];
+    const element = draggedPiece;
+    
+    // ピースを指の位置に追従させる視覚効果
+    element.style.position = 'fixed';
+    element.style.zIndex = '1000';
+    element.style.left = touch.clientX - element.offsetWidth / 2 + 'px';
+    element.style.top = touch.clientY - element.offsetHeight / 2 + 'px';
+}
+
+function handleTouchEnd(e) {
+    e.preventDefault();
+    if (!draggedPiece) return;
+    
+    const touch = e.changedTouches[0];
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+    
+    // スタイルをリセット
+    draggedPiece.style.position = '';
+    draggedPiece.style.zIndex = '';
+    draggedPiece.style.left = '';
+    draggedPiece.style.top = '';
+    draggedPiece.classList.remove('dragging');
+    
+    // ドロップ先がグリッドセルの場合
+    const cell = dropTarget?.closest('.grid-cell');
+    if (cell) {
+        // 既存のドロップ処理を再利用
+        if (game.isGameOver) return;
+        
+        if (cell.querySelector('.puzzle-piece')) {
+            draggedPiece = null;
+            return;
+        }
+        
+        const pieceId = parseInt(draggedPiece.dataset.pieceId);
+        const piece = game.currentPuzzle[pieceId];
+        const required = parseInt(cell.dataset.requiredNumber, 10);
+        
+        if (piece.number !== required) {
+            draggedPiece = null;
+            return;
+        }
+        
+        const placedPiece = draggedPiece.cloneNode(true);
+        placedPiece.draggable = false;
+        placedPiece.addEventListener('click', () => removePiece(cell, pieceId));
+        
+        cell.appendChild(placedPiece);
+        cell.classList.add('filled');
+        
+        piece.used = true;
+        renderPieces();
+        checkCompletion();
+    }
+    
+    draggedPiece = null;
 }
 
 function handleDragOver(e) {

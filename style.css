@@ -191,6 +191,161 @@ h1 {
     }
 }
 
+/* モバイル対応 */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+    
+    header {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+    }
+    
+    .info-bar {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .info-bar > div {
+        font-size: 1em;
+        padding: 8px 15px;
+    }
+    
+    .game-area {
+        gap: 10px;
+    }
+    
+    .left-panel, .right-panel {
+        padding: 15px;
+    }
+    
+    h2 {
+        font-size: 1.1em;
+        margin-bottom: 10px;
+    }
+    
+    .placement-grid {
+        max-width: 100%;
+        gap: 8px;
+    }
+    
+    .grid-cell {
+        min-height: 80px;
+        border-width: 2px;
+    }
+    
+    .grid-cell .hint-number {
+        font-size: 1.2em;
+    }
+    
+    .pieces-container {
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(4, 1fr);
+        gap: 8px;
+        padding: 5px;
+        max-height: none;
+    }
+    
+    .piece-slot {
+        min-height: 70px;
+    }
+    
+    .puzzle-piece {
+        font-size: 1em;
+        padding: 3px;
+    }
+    
+    .piece-slot .puzzle-piece {
+        font-size: 1em;
+        padding: 3px;
+    }
+    
+    .action-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 12px 20px;
+        font-size: 1em;
+    }
+    
+    .modal-content {
+        padding: 25px;
+    }
+    
+    .modal-content h2 {
+        font-size: 2em;
+    }
+    
+    .modal-content p {
+        font-size: 1em;
+    }
+    
+    /* タイトル画面モバイル対応 */
+    .title-content {
+        padding: 20px;
+    }
+    
+    .game-title {
+        font-size: 1.8em;
+    }
+    
+    .game-description h2 {
+        font-size: 1.3em;
+    }
+    
+    .rule-item {
+        padding: 10px;
+        font-size: 0.9em;
+    }
+    
+    .rule-icon {
+        font-size: 1.2em;
+    }
+    
+    .btn-start {
+        font-size: 1.2em;
+        padding: 15px 30px;
+    }
+}
+
+/* 小型スマホ対応 */
+@media (max-width: 480px) {
+    h1 {
+        font-size: 1.2em;
+    }
+    
+    .grid-cell {
+        min-height: 60px;
+    }
+    
+    .grid-cell .hint-number {
+        font-size: 1em;
+    }
+    
+    .piece-slot {
+        min-height: 60px;
+    }
+    
+    .puzzle-piece, .piece-slot .puzzle-piece {
+        font-size: 0.85em;
+        line-height: 1.2;
+    }
+    
+    .game-title {
+        font-size: 1.5em;
+    }
+    
+    .rule-item {
+        font-size: 0.85em;
+    }
+}
+
 .left-panel, .right-panel {
     background: white;
     border-radius: 15px;
