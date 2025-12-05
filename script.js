@@ -279,27 +279,37 @@ function handleDragEnd(e) {
 }
 
 // タッチイベントハンドラ
+let touchClone = null;
+
 function handleTouchStart(e) {
     e.preventDefault();
     draggedPiece = e.target;
-    draggedPiece.classList.add('dragging');
     const touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
+    
+    // クローンを作成してドラッグ中の表示に使用
+    touchClone = draggedPiece.cloneNode(true);
+    touchClone.style.position = 'fixed';
+    touchClone.style.zIndex = '9999';
+    touchClone.style.pointerEvents = 'none';
+    touchClone.style.opacity = '0.8';
+    touchClone.style.width = draggedPiece.offsetWidth + 'px';
+    touchClone.style.height = draggedPiece.offsetHeight + 'px';
+    document.body.appendChild(touchClone);
+    
+    draggedPiece.classList.add('dragging');
 }
 
 function handleTouchMove(e) {
     e.preventDefault();
-    if (!draggedPiece) return;
+    if (!draggedPiece || !touchClone) return;
     
     const touch = e.touches[0];
-    const element = draggedPiece;
     
-    // ピースを指の位置に追従させる視覚効果
-    element.style.position = 'fixed';
-    element.style.zIndex = '1000';
-    element.style.left = touch.clientX - element.offsetWidth / 2 + 'px';
-    element.style.top = touch.clientY - element.offsetHeight / 2 + 'px';
+    // クローンを指の位置に移動
+    touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
+    touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
 }
 
 function handleTouchEnd(e) {
@@ -307,21 +317,21 @@ function handleTouchEnd(e) {
     if (!draggedPiece) return;
     
     const touch = e.changedTouches[0];
-    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
     
-    // スタイルをリセット
-    draggedPiece.style.position = '';
-    draggedPiece.style.zIndex = '';
-    draggedPiece.style.left = '';
-    draggedPiece.style.top = '';
+    // クローンを削除
+    if (touchClone) {
+        touchClone.remove();
+        touchClone = null;
+    }
+    
     draggedPiece.classList.remove('dragging');
     
-    // ドロップ先がグリッドセルの場合
+    // タッチ位置の要素を取得
+    const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
     const cell = dropTarget?.closest('.grid-cell');
-    if (cell) {
-        // 既存のドロップ処理を再利用
-        if (game.isGameOver) return;
-        
+    
+    if (cell && !game.isGameOver) {
+        // 既にピースがあるかチェック
         if (cell.querySelector('.puzzle-piece')) {
             draggedPiece = null;
             return;
@@ -331,13 +341,19 @@ function handleTouchEnd(e) {
         const piece = game.currentPuzzle[pieceId];
         const required = parseInt(cell.dataset.requiredNumber, 10);
         
+        // 番号一致チェック
         if (piece.number !== required) {
             draggedPiece = null;
             return;
         }
         
-        const placedPiece = draggedPiece.cloneNode(true);
-        placedPiece.draggable = false;
+        // ピースを配置
+        const placedPiece = document.createElement('div');
+        placedPiece.className = 'puzzle-piece';
+        placedPiece.style.backgroundColor = piece.color;
+        placedPiece.textContent = getEvidenceLabel(piece.number);
+        placedPiece.style.whiteSpace = 'pre-line';
+        placedPiece.dataset.evidenceNumber = piece.number;
         placedPiece.addEventListener('click', () => removePiece(cell, pieceId));
         
         cell.appendChild(placedPiece);
@@ -633,3 +649,22 @@ function updateDisplay() {
 
 // ゲーム開始
 init();
+
+// 画面向きチェック（モバイルのみ）
+if (isMobile()) {
+    const orientationNotice = document.getElementById('orientation-notice');
+    
+    function checkOrientation() {
+        if (window.innerHeight > window.innerWidth) {
+            // 縦向き
+            orientationNotice.style.display = 'flex';
+        } else {
+            // 横向き
+            orientationNotice.style.display = 'none';
+        }
+    }
+    
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+}
