@@ -421,6 +421,168 @@ h1 {
     }
 }
 
+/* モバイル横画面（可変高さ対応） */
+@media (max-width: 1024px) and (orientation: landscape) {
+    body {
+        height: 100vh;
+        overflow: hidden;
+    }
+    
+    /* タイトル画面の横画面対応 */
+    .title-screen {
+        padding: 10px;
+    }
+    
+    .title-content {
+        padding: 15px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .game-title {
+        font-size: 1.3em;
+        margin-bottom: 15px;
+    }
+    
+    .game-description {
+        margin-bottom: 15px;
+    }
+    
+    .game-description h2 {
+        font-size: 1.1em;
+        margin-bottom: 10px;
+    }
+    
+    .rules {
+        max-height: 30vh;
+        overflow-y: auto;
+    }
+    
+    .rule-item {
+        padding: 8px;
+        font-size: 0.75em;
+        margin: 5px 0;
+    }
+    
+    .rule-icon {
+        font-size: 1em;
+    }
+    
+    .rule-item p {
+        margin: 0;
+    }
+    
+    .rule-item ul {
+        margin: 3px 0 0 15px;
+        font-size: 0.9em;
+    }
+    
+    .rule-item li {
+        margin: 2px 0;
+    }
+    
+    .btn-start {
+        font-size: 1em;
+        padding: 12px 20px;
+        margin-top: 10px;
+    }
+    
+    /* ゲーム画面の横画面寺法 */
+    .container {
+        max-height: 100vh;
+        overflow: hidden;
+    }
+    
+    header {
+        padding: 5px 8px;
+        margin-bottom: 3px;
+    }
+    
+    h1 {
+        font-size: 1em;
+        margin-bottom: 3px;
+    }
+    
+    .info-bar {
+        gap: 3px;
+    }
+    
+    .info-bar > div {
+        font-size: 0.75em;
+        padding: 3px 8px;
+    }
+    
+    .game-area {
+        gap: 3px;
+        margin-bottom: 0;
+    }
+    
+    .left-panel, .right-panel {
+        padding: 5px;
+    }
+    
+    h2 {
+        font-size: 0.85em;
+        margin-bottom: 3px;
+    }
+    
+    .placement-grid {
+        gap: 3px;
+        margin-bottom: 3px;
+    }
+    
+    .grid-cell {
+        min-height: 40px;
+    }
+    
+    .grid-cell .hint-number {
+        font-size: 0.8em;
+    }
+    
+    .pieces-container {
+        gap: 3px;
+        padding: 3px;
+    }
+    
+    .piece-slot {
+        min-height: 40px;
+    }
+    
+    .puzzle-piece {
+        font-size: 0.7em;
+        padding: 1px;
+        line-height: 1.1;
+    }
+    
+    .piece-slot .puzzle-piece {
+        font-size: 0.7em;
+        padding: 1px;
+    }
+    
+    .action-buttons {
+        gap: 3px;
+        margin-top: 3px;
+    }
+    
+    .btn {
+        padding: 5px 8px;
+        font-size: 0.75em;
+    }
+    
+    .modal-content {
+        padding: 15px;
+        max-width: 85%;
+    }
+    
+    .modal-content h2 {
+        font-size: 1.3em;
+    }
+    
+    .modal-content p {
+        font-size: 0.8em;
+    }
+}
+
 .left-panel, .right-panel {
     background: white;
     border-radius: 15px;
