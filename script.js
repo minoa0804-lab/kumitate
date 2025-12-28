@@ -250,6 +250,11 @@ function renderPieces() {
             pieceElement.addEventListener('touchstart', handleTouchStart, { passive: false });
             pieceElement.addEventListener('touchmove', handleTouchMove, { passive: false });
             pieceElement.addEventListener('touchend', handleTouchEnd, { passive: false });
+
+            // モバイル用クリック移動対応
+            if (isMobile()) {
+                pieceElement.addEventListener('click', handlePieceClick);
+            }
         }
 
         // 空きスロットに配置
@@ -261,6 +266,48 @@ function renderPieces() {
             slotIndex++;
         }
     });
+}
+
+// モバイル用：クリックでピース移動
+function handlePieceClick(e) {
+    if (game.isGameOver) return;
+    
+    const pieceElement = e.currentTarget;
+    const pieceId = parseInt(pieceElement.dataset.pieceId);
+    const piece = game.currentPuzzle[pieceId];
+    
+    // 対応する左側の空きセルを探す
+    const cells = placementArea.querySelectorAll('.grid-cell');
+    let targetCell = null;
+    
+    for (const cell of cells) {
+        // すでに埋まっているセルはスキップ
+        if (cell.querySelector('.puzzle-piece')) continue;
+        
+        const required = parseInt(cell.dataset.requiredNumber, 10);
+        if (required === piece.number) {
+            targetCell = cell;
+            break;
+        }
+    }
+    
+    // 対応するセルがあれば移動処理
+    if (targetCell) {
+        const placedPiece = document.createElement('div');
+        placedPiece.className = 'puzzle-piece';
+        placedPiece.style.backgroundColor = piece.color;
+        placedPiece.textContent = getEvidenceLabel(piece.number);
+        placedPiece.style.whiteSpace = 'pre-line';
+        placedPiece.dataset.evidenceNumber = piece.number;
+        placedPiece.addEventListener('click', () => removePiece(targetCell, pieceId));
+        
+        targetCell.appendChild(placedPiece);
+        targetCell.classList.add('filled');
+        
+        piece.used = true;
+        renderPieces();
+        checkCompletion();
+    }
 }
 
 // ドラッグ&ドロップ処理

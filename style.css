@@ -489,50 +489,75 @@ h1 {
     
     /* ゲーム画面の横画面寺法 */
     .container {
+        height: 100vh;
         max-height: 100vh;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
     }
     
     header {
         padding: 5px 8px;
         margin-bottom: 3px;
+        flex-shrink: 0;
     }
     
     h1 {
         font-size: 1em;
-        margin-bottom: 3px;
+        margin-bottom: 2px;
+        display: inline-block;
+        margin-right: 10px;
     }
-    
+
+    /* ヘッダー情報の最適化 */
     .info-bar {
-        gap: 3px;
+        gap: 5px;
+        display: inline-flex;
     }
     
     .info-bar > div {
         font-size: 0.75em;
-        padding: 3px 8px;
+        padding: 2px 6px;
     }
     
     .game-area {
-        gap: 3px;
+        gap: 5px;
         margin-bottom: 0;
+        grid-template-columns: 45% 55%; /* 左45% 右55%で横並び強制 */
+        flex: 1; /* 残りの高さを全て使う */
+        min-height: 0; /* Flexアイテムの縮小を許可 */
+        padding-bottom: 5px;
     }
     
     .left-panel, .right-panel {
         padding: 5px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center; /* 垂直方向中央寄せ */
+        overflow: hidden;
     }
     
     h2 {
         font-size: 0.85em;
         margin-bottom: 3px;
+        flex-shrink: 0;
     }
     
     .placement-grid {
         gap: 3px;
         margin-bottom: 3px;
+        /* 高さ制限を追加して、画面からはみ出さないようにする */
+        width: auto;
+        height: auto;
+        max-height: 100%;
+        max-width: 100%;
+        aspect-ratio: 1;
+        margin: 0 auto;
     }
     
     .grid-cell {
-        min-height: 40px;
+        min-height: 0; /* Flex縮小許可 */
+        height: auto;
     }
     
     .grid-cell .hint-number {
@@ -542,10 +567,18 @@ h1 {
     .pieces-container {
         gap: 3px;
         padding: 3px;
+        grid-template-columns: repeat(4, 1fr); /* 4列3行 */
+        grid-template-rows: repeat(3, 1fr);
+        height: 100%; /* 高さ一杯 */
+        overflow-y: auto;
+        align-content: center; /* グリッド全体を中央配置 */
     }
     
     .piece-slot {
-        min-height: 40px;
+        min-height: 0; /* Flex縮小許可 */
+        aspect-ratio: 1;
+        height: auto;
+        max-height: 15vh; /* ピースが大きくなりすぎないように */
     }
     
     .puzzle-piece {
@@ -560,12 +593,13 @@ h1 {
     }
     
     .action-buttons {
-        gap: 3px;
+        gap: 5px;
         margin-top: 3px;
+        flex-shrink: 0;
     }
     
     .btn {
-        padding: 5px 8px;
+        padding: 5px 10px;
         font-size: 0.75em;
     }
     
