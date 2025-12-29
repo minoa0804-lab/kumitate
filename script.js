@@ -19,7 +19,7 @@ function isMobile() {
 
 // パズルの色パターン
 const colors = [
-    '#e74c3c', '#3498db', '#2ecc71', '#f39c12', 
+    '#e74c3c', '#3498db', '#2ecc71', '#f39c12',
     '#9b59b6', '#1abc9c', '#e67e22', '#34495e',
     '#16a085'
 ];
@@ -73,7 +73,7 @@ const startBtn = document.getElementById('start-btn');
 function init() {
     // スタートボタンのイベントリスナー
     startBtn.addEventListener('click', startGame);
-    
+
     investigateBtn.addEventListener('click', handleInvestigate);
     dismissBtn.addEventListener('click', handleDismiss);
     nextBtn.addEventListener('click', nextStage);
@@ -84,10 +84,10 @@ function startGame() {
     // タイトル画面を非表示、ゲーム画面を表示
     titleScreen.style.display = 'none';
     gameContainer.style.display = 'block';
-    
+
     // タイマー表示を初期化
     timerDisplay.textContent = formatTime(game.timeLimit);
-    
+
     // 左側の必要番号を初期生成
     game.leftNumbers = sampleNineFromTwelve();
     createGrid();
@@ -166,13 +166,13 @@ function sampleNineFromTwelve() {
 function generateCompletablePuzzle() {
     const pieces = [];
     const usedColors = colors.slice(0, game.gridSize * game.gridSize);
-    
+
     // シャッフル
     for (let i = usedColors.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [usedColors[i], usedColors[j]] = [usedColors[j], usedColors[i]];
     }
-    
+
     usedColors.forEach((color, index) => {
         pieces.push({
             id: index,
@@ -182,7 +182,7 @@ function generateCompletablePuzzle() {
             used: false
         });
     });
-    
+
     return pieces;
 }
 
@@ -190,11 +190,11 @@ function generateCompletablePuzzle() {
 function generateIncompletablePuzzle() {
     const pieces = [];
     const totalPieces = game.gridSize * game.gridSize;
-    
+
     // いくつかの色を重複させて、必要な色を欠落させる
     const availableColors = colors.slice(0, totalPieces);
     const puzzlePieces = [];
-    
+
     // ランダムに重複を作成
     for (let i = 0; i < totalPieces; i++) {
         if (Math.random() < 0.3 && puzzlePieces.length > 0) {
@@ -210,13 +210,13 @@ function generateIncompletablePuzzle() {
             });
         }
     }
-    
+
     // シャッフル
     for (let i = puzzlePieces.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [puzzlePieces[i], puzzlePieces[j]] = [puzzlePieces[j], puzzlePieces[i]];
     }
-    
+
     return puzzlePieces.map((piece, index) => ({
         id: index,
         color: piece.color,
@@ -238,22 +238,18 @@ function renderPieces() {
         pieceElement.style.backgroundColor = piece.color;
         pieceElement.textContent = getEvidenceLabel(piece.number);
         pieceElement.style.whiteSpace = 'pre-line';
-        pieceElement.draggable = !piece.used;
         pieceElement.dataset.pieceId = piece.id;
         pieceElement.dataset.evidenceNumber = piece.number;
 
         if (!piece.used) {
-            pieceElement.addEventListener('dragstart', handleDragStart);
-            pieceElement.addEventListener('dragend', handleDragEnd);
-            
-            // タッチイベント対応
-            pieceElement.addEventListener('touchstart', handleTouchStart, { passive: false });
-            pieceElement.addEventListener('touchmove', handleTouchMove, { passive: false });
-            pieceElement.addEventListener('touchend', handleTouchEnd, { passive: false });
-
-            // モバイル用クリック移動対応
             if (isMobile()) {
+                // モバイル用：クリックのみ
                 pieceElement.addEventListener('click', handlePieceClick);
+            } else {
+                // PC用：ドラッグ&ドロップ
+                pieceElement.draggable = true;
+                pieceElement.addEventListener('dragstart', handleDragStart);
+                pieceElement.addEventListener('dragend', handleDragEnd);
             }
         }
 
@@ -271,26 +267,26 @@ function renderPieces() {
 // モバイル用：クリックでピース移動
 function handlePieceClick(e) {
     if (game.isGameOver) return;
-    
+
     const pieceElement = e.currentTarget;
     const pieceId = parseInt(pieceElement.dataset.pieceId);
     const piece = game.currentPuzzle[pieceId];
-    
+
     // 対応する左側の空きセルを探す
     const cells = placementArea.querySelectorAll('.grid-cell');
     let targetCell = null;
-    
+
     for (const cell of cells) {
         // すでに埋まっているセルはスキップ
         if (cell.querySelector('.puzzle-piece')) continue;
-        
+
         const required = parseInt(cell.dataset.requiredNumber, 10);
         if (required === piece.number) {
             targetCell = cell;
             break;
         }
     }
-    
+
     // 対応するセルがあれば移動処理
     if (targetCell) {
         const placedPiece = document.createElement('div');
@@ -300,10 +296,10 @@ function handlePieceClick(e) {
         placedPiece.style.whiteSpace = 'pre-line';
         placedPiece.dataset.evidenceNumber = piece.number;
         placedPiece.addEventListener('click', () => removePiece(targetCell, pieceId));
-        
+
         targetCell.appendChild(placedPiece);
         targetCell.classList.add('filled');
-        
+
         piece.used = true;
         renderPieces();
         checkCompletion();
@@ -334,7 +330,7 @@ function handleTouchStart(e) {
     const touch = e.touches[0];
     touchStartX = touch.clientX;
     touchStartY = touch.clientY;
-    
+
     // クローンを作成してドラッグ中の表示に使用
     touchClone = draggedPiece.cloneNode(true);
     touchClone.style.position = 'fixed';
@@ -344,16 +340,16 @@ function handleTouchStart(e) {
     touchClone.style.width = draggedPiece.offsetWidth + 'px';
     touchClone.style.height = draggedPiece.offsetHeight + 'px';
     document.body.appendChild(touchClone);
-    
+
     draggedPiece.classList.add('dragging');
 }
 
 function handleTouchMove(e) {
     e.preventDefault();
     if (!draggedPiece || !touchClone) return;
-    
+
     const touch = e.touches[0];
-    
+
     // クローンを指の位置に移動
     touchClone.style.left = (touch.clientX - touchClone.offsetWidth / 2) + 'px';
     touchClone.style.top = (touch.clientY - touchClone.offsetHeight / 2) + 'px';
@@ -362,38 +358,38 @@ function handleTouchMove(e) {
 function handleTouchEnd(e) {
     e.preventDefault();
     if (!draggedPiece) return;
-    
+
     const touch = e.changedTouches[0];
-    
+
     // クローンを削除
     if (touchClone) {
         touchClone.remove();
         touchClone = null;
     }
-    
+
     draggedPiece.classList.remove('dragging');
-    
+
     // タッチ位置の要素を取得
     const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
     const cell = dropTarget?.closest('.grid-cell');
-    
+
     if (cell && !game.isGameOver) {
         // 既にピースがあるかチェック
         if (cell.querySelector('.puzzle-piece')) {
             draggedPiece = null;
             return;
         }
-        
+
         const pieceId = parseInt(draggedPiece.dataset.pieceId);
         const piece = game.currentPuzzle[pieceId];
         const required = parseInt(cell.dataset.requiredNumber, 10);
-        
+
         // 番号一致チェック
         if (piece.number !== required) {
             draggedPiece = null;
             return;
         }
-        
+
         // ピースを配置
         const placedPiece = document.createElement('div');
         placedPiece.className = 'puzzle-piece';
@@ -402,15 +398,15 @@ function handleTouchEnd(e) {
         placedPiece.style.whiteSpace = 'pre-line';
         placedPiece.dataset.evidenceNumber = piece.number;
         placedPiece.addEventListener('click', () => removePiece(cell, pieceId));
-        
+
         cell.appendChild(placedPiece);
         cell.classList.add('filled');
-        
+
         piece.used = true;
         renderPieces();
         checkCompletion();
     }
-    
+
     draggedPiece = null;
 }
 
@@ -427,16 +423,16 @@ function handleDragLeave(e) {
 function handleDrop(e) {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
-    
+
     if (game.isGameOver) return;
-    
+
     const cell = e.currentTarget;
-    
+
     // すでにピースが置かれている場合は何もしない（ヒントは無視）
     if (cell.querySelector('.puzzle-piece')) {
         return;
     }
-    
+
     // ピースをセルに配置
     const pieceId = parseInt(draggedPiece.dataset.pieceId);
     const piece = game.currentPuzzle[pieceId];
@@ -447,18 +443,18 @@ function handleDrop(e) {
         // 不一致ならドロップ不可
         return;
     }
-    
+
     const placedPiece = draggedPiece.cloneNode(true);
     placedPiece.draggable = false;
     placedPiece.addEventListener('click', () => removePiece(cell, pieceId));
-    
+
     cell.appendChild(placedPiece);
     cell.classList.add('filled');
-    
+
     // 元のピースを使用済みにする
     piece.used = true;
     renderPieces();
-    
+
     // グリッドが全て埋まったかチェック
     checkCompletion();
 }
@@ -470,7 +466,7 @@ function removePiece(cell, pieceId) {
         placed.remove();
     }
     cell.classList.remove('filled');
-    
+
     const piece = game.currentPuzzle[pieceId];
     piece.used = false;
     renderPieces();
@@ -480,12 +476,12 @@ function removePiece(cell, pieceId) {
 function checkCompletion() {
     const cells = placementArea.querySelectorAll('.grid-cell');
     const allFilled = Array.from(cells).every(cell => cell.children.length > 0);
-    
+
     if (!allFilled) return;
-    
+
     // すべてのセルが埋まっている場合、正しい配置かチェック
     const isCorrect = checkCorrectPlacement();
-    
+
     if (isCorrect) {
         // 公判請求
         setTimeout(() => {
@@ -508,21 +504,21 @@ function checkCorrectPlacement() {
 // 補充捜査
 function handleInvestigate() {
     if (game.isGameOver) return;
-    
+
     // 使用されていないピースをランダムに変更
     const unusedPieces = game.currentPuzzle.filter(p => !p.used);
-    
+
     if (unusedPieces.length === 0) {
         alert('全てのピースが使用されています。');
         return;
     }
-    
+
     // ランダムに1-3個のピースを変更
     const changeCount = Math.min(
         Math.floor(Math.random() * 3) + 1,
         unusedPieces.length
     );
-    
+
     for (let i = 0; i < changeCount; i++) {
         const randomIndex = Math.floor(Math.random() * unusedPieces.length);
         const piece = unusedPieces[randomIndex];
@@ -530,39 +526,39 @@ function handleInvestigate() {
         piece.color = colors[Math.floor(Math.random() * colors.length)];
         piece.number = Math.floor(Math.random() * 12) + 1;
     }
-    
+
     renderPieces();
 }
 
 // 不起訴
 function handleDismiss() {
     const elapsed = Date.now() - game.startTime;
-    
+
     // 10秒経過前の不起訴はゲームオーバー
     if (elapsed < 10000) {
         handleGameOver('捜査不十分！最低10秒は捜査を尽くす必要があります。');
         return;
     }
-    
+
     // まだ配置可能なピースがある場合はゲームオーバー
     if (canStillPlacePieces()) {
         handleGameOver('配置可能な証拠があります！捜査を続けてください。');
         return;
     }
-    
+
     stopTimer();
-    
+
     resultModal.classList.remove('hidden');
     resultTitle.textContent = '不起訴';
     resultTitle.className = 'dismissal';
-    
+
     if (!game.canComplete) {
         resultMessage.textContent = '正解！このパズルは完成できませんでした。';
     } else {
         resultMessage.textContent = '残念！このパズルは完成可能でした。';
         game.score += 30000; // ペナルティ
     }
-    
+
     resultTime.textContent = `経過時間: ${formatTime(game.timeLimit - (Date.now() - game.startTime))}`;
     game.score += elapsed;
     updateDisplay();
@@ -572,13 +568,13 @@ function handleDismiss() {
 function handleGameOver(message) {
     game.isGameOver = true;
     stopTimer();
-    
+
     resultModal.classList.remove('hidden');
     resultTitle.textContent = 'ゲームオーバー';
     resultTitle.className = 'game-over';
     resultMessage.textContent = message;
     resultTime.textContent = '適正な捜査を心がけましょう。';
-    
+
     // 次のステージボタンを「最初から」に変更
     nextBtn.textContent = '最初からやり直す';
     nextBtn.onclick = () => location.reload();
@@ -588,13 +584,13 @@ function handleGameOver(message) {
 function canStillPlacePieces() {
     const unusedPieces = game.currentPuzzle.filter(p => !p.used);
     if (unusedPieces.length === 0) return false;
-    
+
     // 空いているセルを取得
     const cells = placementArea.querySelectorAll('.grid-cell');
     const emptyCells = Array.from(cells).filter(cell => !cell.querySelector('.puzzle-piece'));
-    
+
     if (emptyCells.length === 0) return false;
-    
+
     // 未使用ピースと空きセルの番号が一致するものがあるかチェック
     for (const piece of unusedPieces) {
         for (const cell of emptyCells) {
@@ -604,24 +600,24 @@ function canStillPlacePieces() {
             }
         }
     }
-    
+
     return false;
 }
 
 // 公判請求
 function handleIndictment() {
     if (game.isGameOver) return;
-    
+
     stopTimer();
     const elapsed = Date.now() - game.startTime;
     const remaining = game.timeLimit - elapsed;
-    
+
     resultModal.classList.remove('hidden');
     resultTitle.textContent = '公判請求';
     resultTitle.className = 'indictment';
     resultMessage.textContent = 'パズルを完成させました！';
     resultTime.textContent = `残り時間: ${formatTime(remaining)}`;
-    
+
     game.score += elapsed;
     updateDisplay();
 }
@@ -631,11 +627,11 @@ function nextStage() {
     game.stage++;
     game.isGameOver = false;
     resultModal.classList.add('hidden');
-    
+
     // ボタンテキストを元に戻す
     nextBtn.textContent = '次のステージへ';
     nextBtn.onclick = nextStage;
-    
+
     // 左側の必要番号を再生成してグリッドを再構築
     game.leftNumbers = sampleNineFromTwelve();
     createGrid();
@@ -663,13 +659,13 @@ function stopTimer() {
 function updateTimer() {
     const elapsed = Date.now() - game.startTime;
     const remaining = game.timeLimit - elapsed;
-    
+
     if (remaining <= 0) {
         // タイムアップ
         handleGameOver('タイムアップ！制限時間内に判断できませんでした。');
         return;
     }
-    
+
     // 残り時間を表示（赤字で警告）
     timerDisplay.textContent = formatTime(remaining);
     if (remaining < 5000) {
@@ -684,7 +680,7 @@ function formatTime(ms) {
     const deciseconds = Math.floor((Math.max(0, ms) % 1000) / 100);
     const minutes = Math.floor(totalSeconds / 60);
     const secs = totalSeconds % 60;
-    
+
     return `${String(minutes).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${deciseconds}`;
 }
 
@@ -700,7 +696,7 @@ init();
 // 画面向きチェック（モバイルのみ）
 if (isMobile()) {
     const orientationNotice = document.getElementById('orientation-notice');
-    
+
     function checkOrientation() {
         if (window.innerHeight > window.innerWidth) {
             // 縦向き
@@ -710,7 +706,7 @@ if (isMobile()) {
             orientationNotice.style.display = 'none';
         }
     }
-    
+
     checkOrientation();
     window.addEventListener('resize', checkOrientation);
     window.addEventListener('orientationchange', checkOrientation);
